@@ -1,0 +1,62 @@
+---
+version: 3
+
+options:
+  package_manager_path: /usr/bin/microdnf
+
+#Passing it as build arg, to parametrize it.
+#images:
+#  base_image:
+#    name: registry.redhat.io/ansible-automation-platform-24/ee-minimal-rhel8:latest
+
+dependencies:
+  galaxy: requirements.yml
+  system: bindep.txt
+
+additional_build_files:
+    - src: ./ansible.cfg
+      dest: configs
+    - src: ./files/binaries.tar.gz
+      dest: configs
+    - src: ./zip_files/ss.zip
+      dest: configs
+    - src: ./zip_files/gradle.zip
+      dest: configs
+
+additional_build_steps:
+  prepend_base:
+    - COPY _build/configs/ansible.cfg /etc/ansible/ansible.cfg
+    - COPY _build/configs/binaries.tar.gz /tmp/binaries.tar.gz
+    - COPY _build/configs/ss.zip /tmp/ss.zip
+    - COPY _build/configs/gradle.zip /tmp/gradle.zip
+  append_base:
+    - RUN $PKGMGR install -y unzip
+  append_final:
+    # Install oc binaries
+    - RUN tar xvfz /tmp/binaries.tar.gz -C /usr/local/bin/
+    - RUN chmod +x /usr/local/bin/* ; chown root:root /usr/local/bin/*
+    - RUN rm -f /tmp/binaries.tar.gz
+    # Intall Gradle
+    - RUN unzip -d /opt /tmp/gradle.zip ; mv /opt/gradle-* /opt/gradle ; ln -s /opt/gradle/bin/gradle /usr/local/bin/gradle
+    - ENV JAVA_HOME="/usr/lib/jvm/jre-1.8.0-openjdk"
+    - RUN rm -f /tmp/gradle.zip
+    # Install Delinea SS  (tss)
+    - RUN mkdir /opt/tss ; unzip -d /opt/tss /tmp/ss.zip ; ln -s /opt/tss/tss /usr/local/tsss
+    - RUN rm -f /tmp/ss.zip
+    # Add Labels
+    - LABEL acme.description="Ansible EE to build Apps"
+    - ARG EE_NAME
+    - LABEL acme.ee.name=$EE_NAME
+    - ARG EE_VERSION
+    - LABEL acme.ee.version=$EE_VERSION
+    - ARG EE_BUILD_DATE
+    - LABEL acme.ee.build_date=$EE_BUILD_DATE
+    - ARG HELM_VERSION
+    - LABEL acme.helm.version=$HELM_VERSION
+    - ARG GRADLE_VERSION
+    - LABEL acme.gradle.version=$GRADLE_VERSION
+    - ARG DELINEA_SS_VERSION
+    - LABEL acme.delinea.ss.version=$DELINEA_SS_VERSION
+    - ARG OCP_VERSION
+    - LABEL acme.openshift.version=$OCP_VERSION
+...
