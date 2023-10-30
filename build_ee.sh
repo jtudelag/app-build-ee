@@ -5,7 +5,7 @@
 #authors      :jtudelag@redhat.com
 #description  :Script to build an Ansible Execution Environment to build Applications.
 #
-#
+
 set -euo pipefail
 
 #VARS
