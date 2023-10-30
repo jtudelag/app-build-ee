@@ -1,3 +1,4 @@
+context/
 files/
 zip_files/
-andible.cfg
+ansible.cfg
